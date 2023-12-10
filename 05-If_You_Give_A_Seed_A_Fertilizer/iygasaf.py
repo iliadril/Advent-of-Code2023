@@ -26,9 +26,13 @@ class CategoryValue:
         s_l = source_range[0] in my_range
         s_u = source_range[-1] in my_range
         if not (m_l or m_u or s_l or s_u):
-            return [source_range]  # add full range as output
+            return []  # add full range as output
         else:  # add intersection, calculate destination
-            offset = max(my_range[0], source_range[0]) - min(my_range[0], source_range[0])
+            offset = (
+                max(my_range[0], source_range[0]) - min(my_range[0], source_range[0])
+                if not m_l
+                else 0
+            )
             diff = min(my_range[-1], source_range[-1]) + 1 - max(my_range[0], source_range[0])
             destination_ranges += [
                 range(self.destination_start + offset, self.destination_start + diff + offset)
@@ -57,11 +61,13 @@ class CategoryMap:
     def get_extreme_ranges(self, source_range: list[range]) -> list[range]:
         total_extremes = []
         for c_val in self.values:
+            local_extremes = []
             extremes = source_range[:]
             while extremes:
                 extreme = extremes.pop(0)
-                total_extremes += c_val.split_on_extremes(extreme)
-        return total_extremes
+                local_extremes += c_val.split_on_extremes(extreme)
+            total_extremes += local_extremes
+        return total_extremes if total_extremes else source_range
 
 
 # ~~~~~~~~ END OF CLASSES ~~~~~~~~
@@ -112,12 +118,14 @@ def get_seed_ranges(seeds: list[int]) -> list[range]:
 
 
 def get_lowest_location(seed_ranges: list[range], category_maps: list[CategoryMap]) -> int:
-    result = seed_ranges[:]
-    for category_map in category_maps:
-        result = category_map.get_extreme_ranges(result)
+    total_result = []
+    for seed_range in seed_ranges:
+        result = [seed_range]
+        for category_map in category_maps:
+            result = category_map.get_extreme_ranges(result)
+        total_result += result
 
-    print(result)
-    return min([value_range[0] for value_range in result])
+    return min([value_range[0] for value_range in total_result])
 
 
 def part2() -> int:
