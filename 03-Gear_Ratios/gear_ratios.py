@@ -36,7 +36,7 @@ def check_neighbours(schematic: list[str], x_pos: int, y_pos: int,
 
 def get_parts_coordinates(schematic: list[str], part_symbols: bool | list[str] = False) -> list[
     tuple[int, int, int, tuple[int, int]]]:
-    coordinates = []
+    coordinates = []  # x_position, y_position, number_length, [all valid neighbours positions]
     for y, line in enumerate(schematic):
         num_length, x_pos, y_pos = 0, 0, 0  # reset every line x_pos
         for x, ch in enumerate(line):
@@ -71,7 +71,8 @@ def part2() -> int:
     symbol_coordinates = []
     for x_pos, y_pos, num_length, sym_pos in get_parts_coordinates(data, ['*']):
         number_coordinates.update({tuple((full_x, y_pos)): data[y_pos][x_pos:x_pos + num_length]
-                               for full_x in range(x_pos, x_pos + num_length)})  # all possible cords + number as value
+                                   for full_x in
+                                   range(x_pos, x_pos + num_length)})  # all possible cords + number as value
         symbol_coordinates += sym_pos
 
     sym_pos_counter = Counter(symbol_coordinates)
