@@ -28,8 +28,11 @@ class CategoryValue:
         if not (m_l or m_u or s_l or s_u):
             return [source_range]  # add full range as output
         else:  # add intersection, calculate destination
+            offset = max(my_range[0], source_range[0]) - min(my_range[0], source_range[0])
             diff = min(my_range[-1], source_range[-1]) + 1 - max(my_range[0], source_range[0])
-            destination_ranges += [range(self.destination_start, self.destination_start + diff)]
+            destination_ranges += [
+                range(self.destination_start + offset, self.destination_start + diff + offset)
+            ]
             if m_l:  # add lower difference
                 destination_ranges += [range(source_range[0], my_range[0] + 1)]
             if m_u:  # add upper difference
@@ -51,16 +54,14 @@ class CategoryMap:
                 break
         return destination
 
-    def get_extreme_ranges(self, source_range: range) -> list[range]:
-        total_extremes = [source_range]
+    def get_extreme_ranges(self, source_range: list[range]) -> list[range]:
+        total_extremes = []
         for c_val in self.values:
-            extremes = []
+            extremes = source_range[:]
             while extremes:
-                extreme = total_extremes.pop(0)
-                extremes += c_val.split_on_extremes(extreme)
-            total_extremes = extremes
-        print(extremes)
-        return extremes
+                extreme = extremes.pop(0)
+                total_extremes += c_val.split_on_extremes(extreme)
+        return total_extremes
 
 
 # ~~~~~~~~ END OF CLASSES ~~~~~~~~
@@ -112,12 +113,11 @@ def get_seed_ranges(seeds: list[int]) -> list[range]:
 
 def get_lowest_location(seed_ranges: list[range], category_maps: list[CategoryMap]) -> int:
     result = seed_ranges[:]
-    for seed_range in result:
-        for category_map in category_maps:
-            result += [category_map.get_extreme_ranges(seed_range)]
-        result += seed_range
+    for category_map in category_maps:
+        result = category_map.get_extreme_ranges(result)
 
-    return result
+    print(result)
+    return min([value_range[0] for value_range in result])
 
 
 def part2() -> int:
