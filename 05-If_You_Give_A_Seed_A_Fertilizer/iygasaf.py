@@ -1,21 +1,40 @@
 import re
-from itertools import chain
 from dataclasses import dataclass
 
 
 @dataclass
 class CategoryValue:
-    destination_range: int
-    source_range: int
+    destination_start: int
+    source_start: int
     range_length: int
 
     def get_destination(self, source: int):  # return destination -1 when not found
-        range_increment = self.range_length - 1  # difference between lower and upper bound of source values
-        upper_bound = self.source_range + range_increment  # highest valid source number
+        # get the difference between lower and upper bound of source values
+        range_increment = self.range_length - 1
+        upper_bound = self.source_start + range_increment  # highest valid source number
         diff = upper_bound - source
         if 0 <= diff <= range_increment:
-            return self.destination_range + range_increment - diff
+            return self.destination_start + range_increment - diff
         return -1
+
+    def split_on_extremes(self, source_range: range) -> list[range]:
+        destination_ranges = []
+        my_range = range(self.source_start, self.source_start + self.range_length)
+        # check whether [M]my_range or [S]source_range [L]lower or [U]upper bounds are inside
+        m_l = my_range[0] in source_range
+        m_u = my_range[-1] in source_range
+        s_l = source_range[0] in my_range
+        s_u = source_range[-1] in my_range
+        if not (m_l or m_u or s_l or s_u):
+            return [source_range]  # add full range as output
+        else:  # add intersection, calculate destination
+            diff = min(my_range[-1], source_range[-1]) + 1 - max(my_range[0], source_range[0])
+            destination_ranges += [range(self.destination_start, self.destination_start + diff)]
+            if m_l:  # add lower difference
+                destination_ranges += [range(source_range[0], my_range[0] + 1)]
+            if m_u:  # add upper difference
+                destination_ranges += [range(my_range[-1], source_range[-1] + 1)]
+            return destination_ranges
 
 
 @dataclass
@@ -23,7 +42,7 @@ class CategoryMap:
     name: str
     values: list[CategoryValue]
 
-    def get_destination_value(self, source: int):
+    def get_destination_value(self, source: int) -> int:
         destination = source
         for cat_val in self.values:
             found = cat_val.get_destination(source)
@@ -32,28 +51,46 @@ class CategoryMap:
                 break
         return destination
 
+    def get_extreme_ranges(self, source_range: range) -> list[range]:
+        total_extremes = [source_range]
+        for c_val in self.values:
+            extremes = []
+            while extremes:
+                extreme = total_extremes.pop(0)
+                extremes += c_val.split_on_extremes(extreme)
+            total_extremes = extremes
+        print(extremes)
+        return extremes
+
+
+# ~~~~~~~~ END OF CLASSES ~~~~~~~~
+
 
 def get_data(filename: str) -> tuple[list[int], list[CategoryMap]]:
-    with open(filename, 'r') as f:
-        seeds = [int(num) for num in f.readline().rstrip().split(':')[1].split()]
+    with open(filename, "r") as f:
+        seeds = [int(num) for num in f.readline().rstrip().split(":")[1].split()]
         map_pattern = re.compile(r"(.*)\smap:\s*([\s\d]+)")  # get numbers from each map
         matches = map_pattern.findall(f.read())
-        category_maps = []
+        cat_maps: list[CategoryMap] = []
         for map_name, values in matches:
-            category_maps += [CategoryMap(map_name,
-                                          [CategoryValue(*value) for value in [[int(num) for num in line.split()]
-                                                                               for line in values.rstrip().split('\n')]])]
-        return seeds, category_maps
+            cat_maps += [
+                CategoryMap(
+                    map_name,
+                    [
+                        CategoryValue(*value)
+                        for value in [
+                            [int(num) for num in line.split()]
+                            for line in values.rstrip().split("\n")
+                        ]
+                    ],
+                )
+            ]
+        return seeds, cat_maps
 
 
-def process_seed_ranges(seeds: list[int]):
-    i_seeds = iter(seeds)
-    return [list(range(start, start + length)) for start, length in zip(i_seeds, i_seeds)]
-
-
-def get_lowest_location(seeds: list[int], category_maps: list[CategoryMap]) -> int:
+def get_lowest_location_naive(seeds: list[int], category_maps: list[CategoryMap]) -> int:
     result = []
-    for i, seed in enumerate(seeds):
+    for _, seed in enumerate(seeds):
         for category_map in category_maps:
             seed = category_map.get_destination_value(seed)
         result += [seed]
@@ -62,13 +99,30 @@ def get_lowest_location(seeds: list[int], category_maps: list[CategoryMap]) -> i
 
 def part1() -> int:
     seeds, category_maps = get_data("input")
-    return get_lowest_location(seeds, category_maps)
+    return get_lowest_location_naive(seeds, category_maps)
+
+
+# ~~~~~~~~ PART 2 ~~~~~~~~
+
+
+def get_seed_ranges(seeds: list[int]) -> list[range]:
+    i_seeds = iter(seeds)
+    return [range(start, start + length) for start, length in zip(i_seeds, i_seeds)]
+
+
+def get_lowest_location(seed_ranges: list[range], category_maps: list[CategoryMap]) -> int:
+    result = seed_ranges[:]
+    for seed_range in result:
+        for category_map in category_maps:
+            result += [category_map.get_extreme_ranges(seed_range)]
+        result += seed_range
+
+    return result
 
 
 def part2() -> int:
     raw_seeds, category_maps = get_data("test_input")
-    seeds = list(chain.from_iterable(process_seed_ranges(raw_seeds)))
-    return get_lowest_location(seeds, category_maps)
+    return get_lowest_location(get_seed_ranges(raw_seeds), category_maps)
 
 
 if __name__ == "__main__":
