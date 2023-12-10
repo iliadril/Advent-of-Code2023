@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 import re
+from itertools import chain
+from dataclasses import dataclass
 
 
 @dataclass
@@ -45,16 +46,32 @@ def get_data(filename: str) -> tuple[list[int], list[CategoryMap]]:
         return seeds, category_maps
 
 
-def part1() -> int:
-    seeds, category_maps = get_data("input")
+def process_seed_ranges(seeds: list[int]):
+    i_seeds = iter(seeds)
+    return [list(range(start, start + length)) for start, length in zip(i_seeds, i_seeds)]
+
+
+def get_lowest_location(seeds: list[int], category_maps: list[CategoryMap]) -> int:
     result = []
-    for seed in seeds:
+    for i, seed in enumerate(seeds):
         for category_map in category_maps:
             seed = category_map.get_destination_value(seed)
         result += [seed]
     return min(result)
 
 
+def part1() -> int:
+    seeds, category_maps = get_data("input")
+    return get_lowest_location(seeds, category_maps)
+
+
+def part2() -> int:
+    raw_seeds, category_maps = get_data("test_input")
+    seeds = list(chain.from_iterable(process_seed_ranges(raw_seeds)))
+    return get_lowest_location(seeds, category_maps)
+
+
 if __name__ == "__main__":
     print("Day 5:")
     print(part1())
+    print(part2())
