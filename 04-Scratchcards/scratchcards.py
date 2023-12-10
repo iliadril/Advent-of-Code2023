@@ -30,6 +30,23 @@ def part1() -> int:
     return result
 
 
+def process_scratchcards(scratchcards: list[Scratchcard], recursion_depth=0):
+    total_winnings = 1
+    if not scratchcards:  # end of scratchcards
+        return total_winnings
+    if won := len(scratchcards[0].get_winning_numbers()):
+        total_winnings += won
+        for i in range(won):
+            total_winnings += process_scratchcards(scratchcards[i+1:], recursion_depth=recursion_depth+1)
+    return total_winnings
+
+
+def part2() -> int:
+    scratchcards = get_data("input")
+    return process_scratchcards(scratchcards) + 1
+
+
 if __name__ == "__main__":
     print("Day 4:")
     print(part1())
+    print(part2())
