@@ -26,7 +26,7 @@ def part1() -> int:
     result = 0
     for s in scratchcards:
         winning = s.get_winning_numbers()
-        result += 2**(len(winning) - 1) if winning else 0
+        result += 2 ** (len(winning) - 1) if winning else 0
     return result
 
 
@@ -35,15 +35,17 @@ def process_scratchcards(scratchcards: list[Scratchcard], recursion_depth=0):
     if not scratchcards:  # end of scratchcards
         return total_winnings
     if won := len(scratchcards[0].get_winning_numbers()):
-        total_winnings += won
         for i in range(won):
-            total_winnings += process_scratchcards(scratchcards[i+1:], recursion_depth=recursion_depth+1)
+            total_winnings += process_scratchcards(scratchcards[i + 1:], recursion_depth=recursion_depth + 1)
     return total_winnings
 
 
 def part2() -> int:
     scratchcards = get_data("input")
-    return process_scratchcards(scratchcards) + 1
+    result = 0
+    for i, _ in enumerate(scratchcards):
+        result += process_scratchcards(scratchcards[i:])
+    return result
 
 
 if __name__ == "__main__":
