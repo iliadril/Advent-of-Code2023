@@ -26,10 +26,10 @@ def check_neighbours(schematic: list[str], x_pos: int, y_pos: int,
                 found += [(x, y)]
     # check left
     if schematic[y_pos][x_pos - 1] in part_symbols:
-        return [(x_pos - 1, y_pos)]
+        found += [(x_pos - 1, y_pos)]
     # check right
     if schematic[y_pos][x_pos + num_length] in part_symbols:
-        return [(x_pos + num_length, y_pos)]
+        found += [(x_pos + num_length, y_pos)]
     # not one symbol spotted :salute:
     return found
 
@@ -64,7 +64,7 @@ def part1() -> int:
 
 
 def part2() -> int:
-    data = get_data("test_input")
+    data = get_data("input")
     result = []
 
     number_coordinates = {}
