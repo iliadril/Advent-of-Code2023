@@ -37,10 +37,10 @@ class CategoryValue:
             destination_ranges += [
                 range(self.destination_start + offset, self.destination_start + diff + offset)
             ]
-            if m_l:  # add lower difference
-                destination_ranges += [range(source_range[0], my_range[0] + 1)]
-            if m_u:  # add upper difference
-                destination_ranges += [range(my_range[-1], source_range[-1] + 1)]
+            if m_l and not s_l:  # add lower difference
+                destination_ranges += [range(source_range[0], my_range[0])]
+            if m_u and not s_u:  # add upper difference
+                destination_ranges += [range(my_range[-1] + 1, source_range[-1] + 1)]
             return destination_ranges
 
 
