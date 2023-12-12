@@ -17,6 +17,14 @@ class CategoryValue:
             return self.destination_start + range_increment - diff
         return -1
 
+    def get_source(self, destination: int):
+        range_increment = self.range_length - 1
+        upper_bound = self.destination_start + range_increment
+        diff = upper_bound - destination
+        if 0 <= diff <= range_increment:
+            return self.source_start + range_increment - diff
+        return -1
+
     def split_on_extremes(self, source_range: range) -> list[range]:
         destination_ranges = []
         my_range = range(self.source_start, self.source_start + self.range_length)
@@ -57,6 +65,15 @@ class CategoryMap:
                 destination = found
                 break
         return destination
+
+    def get_source_value(self, destination: int) -> int:
+        source = destination
+        for cat_val in self.values:
+            found = cat_val.get_source(source)
+            if found != -1:
+                source = found
+                break
+        return source
 
     def get_extreme_ranges(self, source_range: list[range]) -> list[range]:
         total_extremes = []
@@ -133,7 +150,31 @@ def part2() -> int:
     return get_lowest_location(get_seed_ranges(raw_seeds), category_maps)
 
 
+# ~~~~~~~~ PART 2 - brute force ~~~~~~~~
+def check_location_number(
+    category_maps: list[CategoryMap],
+    seeds: list[range],
+    location_number: int,
+    verbose: bool = False,
+) -> bool:
+    if location_number % 10000 == 0 and verbose:
+        print(f"Checking {location_number:,}")
+    seed_number = location_number
+    for cat_map in category_maps[::-1]:
+        seed_number = cat_map.get_source_value(seed_number)
+    return any(seed_number in seed for seed in seeds)
+
+
+def part2_brute_force() -> int:
+    raw_seeds, category_maps = get_data("input")
+    seeds = get_seed_ranges(raw_seeds)
+    location_number = 0
+    while not check_location_number(category_maps, seeds, location_number, verbose=False):
+        location_number += 1
+    return location_number
+
+
 if __name__ == "__main__":
     print("Day 5:")
     print(part1())
-    print(part2())
+    print(part2_brute_force())
