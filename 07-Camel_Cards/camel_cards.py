@@ -23,7 +23,7 @@ class Hand:
         elif any(count == 4 for count in counter.values()):
             return 6
         # Full house e.g. 23332
-        elif any(count == 3 for count in counter.values()) and any(count == 2 for count in counter.values()):
+        elif any(c == 3 for c in counter.values()) and any(c == 2 for c in counter.values()):
             return 5
         # Three of a kind e.g. TTT98
         elif any(count == 3 for count in counter.values()):
@@ -49,8 +49,9 @@ class Hand:
             return True
         elif self.hand_strength() == other.hand_strength():
             for card, other_card in zip(self.cards, other.cards):
-                if self.card_strength.index(card) > self.card_strength.index(other_card):
-                    return True
+                if self.card_strength.index(card) == self.card_strength.index(other_card):
+                    continue
+                return self.card_strength.index(card) > self.card_strength.index(other_card)
         return False
 
 
