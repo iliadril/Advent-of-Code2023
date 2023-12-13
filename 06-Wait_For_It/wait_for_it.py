@@ -45,6 +45,13 @@ def part1() -> int:
     return result
 
 
+def part2() -> int:
+    # basically run the part1 code but erase the spaces between time and distance in "input".
+    # Why didn't I do that? Well, I cannot be bothered.
+    # brute force all the way since I forgot basic math during uni (it kinda sucks but oh well)
+    pass
+
+
 if __name__ == "__main__":
     print("Day 6:")
     print(part1())
