@@ -10,12 +10,13 @@ class Hand:
     cards: list[str]
     bid: int
 
-    card_strength: ClassVar[str] = "AKQJT98765432"
+    card_strength: ClassVar[str] = "AKQT98765432J"
 
     def hand_strength(self) -> int:
         # Five of a kind -> Four of a kind -> Full house -> Three of a kind -> Two pair -> One pair -> High card
         assert len(self.cards) == 5, "Invalid hand length."
-        counter = Counter(self.cards)
+        optimal_hand = self.get_optimal_hand()
+        counter = Counter(optimal_hand)
         # Five of a kind e.g. AA8AA
         if any(count == 5 for count in counter.values()):
             return 7
@@ -36,6 +37,13 @@ class Hand:
             return 2
         else:
             return 1
+
+    def get_optimal_hand(self) -> list[str]:
+        jokerless = [c for c in self.cards if c != "J"]
+        if not jokerless:
+            return ["A" * 5]
+        most_common = Counter(jokerless).most_common(1)[0][0]
+        return [c if c != "J" else most_common for c in self.cards]
 
     def __eq__(self, other):
         if not isinstance(other, Hand):
@@ -65,7 +73,7 @@ def get_data(filename: str) -> list[Hand]:
         ]
 
 
-def part1() -> int:
+def part2() -> int:
     cards = get_data("input")
     sorted_cards = sorted(cards)
     # print(*list([(hand, hand.hand_strength()) for hand in sorted_cards]), sep="\n")
@@ -74,4 +82,4 @@ def part1() -> int:
 
 if __name__ == "__main__":
     print("Day 7:")
-    print(part1())
+    print(part2())
