@@ -17,22 +17,22 @@ class Hand:
         assert len(self.cards) == 5, "Invalid hand length."
         counter = Counter(self.cards)
         # Five of a kind e.g. AA8AA
-        if any(count == 5 for count in counter):
+        if any(count == 5 for count in counter.values()):
             return 7
         # Four of a kind e.g. AA8AA
-        elif any(count == 4 for count in counter):
+        elif any(count == 4 for count in counter.values()):
             return 6
         # Full house e.g. 23332
-        elif any(count == 3 for count in counter) and any(count == 2 for count in counter):
+        elif any(count == 3 for count in counter.values()) and any(count == 2 for count in counter.values()):
             return 5
         # Three of a kind e.g. TTT98
-        elif any(count == 3 for count in counter):
+        elif any(count == 3 for count in counter.values()):
             return 4
         # Two pair e.g. 23432
-        elif sum(1 for count in counter if count == 4) == 2:
+        elif sum(1 for count in counter.values() if count == 2) == 2:
             return 3
         # One pair e.g. A23A4
-        elif any(count == 2 for count in counter):
+        elif any(count == 2 for count in counter.values()):
             return 2
         else:
             return 1
@@ -47,9 +47,10 @@ class Hand:
             raise NotImplemented
         if self.hand_strength() < other.hand_strength():
             return True
-        for card, other_card in zip(self.cards, other.cards):
-            if self.card_strength.index(card) < self.card_strength.index(other_card):
-                return True
+        elif self.hand_strength() == other.hand_strength():
+            for card, other_card in zip(self.cards, other.cards):
+                if self.card_strength.index(card) > self.card_strength.index(other_card):
+                    return True
         return False
 
 
@@ -65,7 +66,8 @@ def get_data(filename: str) -> list[Hand]:
 
 def part1() -> int:
     cards = get_data("input")
-    sorted_cards = sorted(cards, reverse=True)
+    sorted_cards = sorted(cards)
+    print(*list([(hand, hand.hand_strength()) for hand in sorted_cards]), sep="\n")
     return sum(i * hand.bid for i, hand in enumerate(sorted_cards, start=1))
 
 
