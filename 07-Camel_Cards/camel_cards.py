@@ -68,7 +68,7 @@ def get_data(filename: str) -> list[Hand]:
 def part1() -> int:
     cards = get_data("input")
     sorted_cards = sorted(cards)
-    print(*list([(hand, hand.hand_strength()) for hand in sorted_cards]), sep="\n")
+    # print(*list([(hand, hand.hand_strength()) for hand in sorted_cards]), sep="\n")
     return sum(i * hand.bid for i, hand in enumerate(sorted_cards, start=1))
 
 
