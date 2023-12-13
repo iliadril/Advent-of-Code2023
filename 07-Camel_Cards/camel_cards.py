@@ -14,8 +14,8 @@ class Hand:
 
     def hand_strength(self) -> int:
         # Five of a kind -> Four of a kind -> Full house -> Three of a kind -> Two pair -> One pair -> High card
-        assert len(self.cards) == 5, "Invalid hand length."
         optimal_hand = self.get_optimal_hand()
+        assert len(self.cards) == 5, "Invalid hand length."
         counter = Counter(optimal_hand)
         # Five of a kind e.g. AA8AA
         if any(count == 5 for count in counter.values()):
@@ -41,7 +41,7 @@ class Hand:
     def get_optimal_hand(self) -> list[str]:
         jokerless = [c for c in self.cards if c != "J"]
         if not jokerless:
-            return ["A" * 5]
+            return ["A"] * 5
         most_common = Counter(jokerless).most_common(1)[0][0]
         return [c if c != "J" else most_common for c in self.cards]
 
