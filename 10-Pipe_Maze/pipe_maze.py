@@ -58,7 +58,8 @@ class MazeTile:
         route = [self.position]
         while bool(len(route) == 1) != bool(current_pipe != self):
             possibilities = [[x, y] for x, y in current_pipe.leads_to
-                             if current_pipe.is_valid_route(Point(x, y), maze) and Point(x, y) not in route]
+                             if current_pipe.is_valid_route(Point(x, y), maze)
+                             and Point(x, y) not in route]
             if not possibilities:
                 # route += [self.position]
                 break
@@ -88,10 +89,24 @@ def part1() -> int:
 
 
 def part2() -> int:
+    maze = get_data("test_input_part2")
+    x, y = [(x, y) for y, line in enumerate(maze) for x, pipe in enumerate(line) if len(pipe.leads_to) == 4][0]
+    route = maze[y][x].loop(maze)
+    # check for the enclosed with route mask
+    route_mask = [[1 if value.position in route else 0 for value in line] for line in maze]
+
+    for line in route_mask:
+        print(*line, sep="")
+    for y, line in enumerate(maze):
+        for x, tile in enumerate(line):
+            if x not in [0, len(line)] or y not in [0, len(maze)]:
+                pass
+
+
     return
 
 
 if __name__ == "__main__":
     print("Day 10:")
-    print(f"Part 1: {part1()}")
+    # print(f"Part 1: {part1()}")
     print(f"Part 2: {part2()}")
