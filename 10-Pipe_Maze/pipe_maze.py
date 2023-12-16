@@ -42,11 +42,18 @@ class Point:
         return pipe_dict[char]
 
 
-class MazeTile:
-    position: Point
-    leads_to: list[Point]
+class MazeChar:
+    def __init__(self, char: str, mask: str = "I"):
+        self.char = char
+        self.mask = mask
 
+    def __repr__(self):
+        return f"MazeChar(char={self.char}, mask={self.mask})"
+
+
+class MazeTile(MazeChar):
     def __init__(self, position: Point, char: str):
+        super().__init__(char)
         self.position = position
         self.leads_to = [output + position for output in Point.from_char(char)]
 
@@ -65,9 +72,13 @@ class MazeTile:
                 break
             for x, y in possibilities:
                 current_pipe = maze[y][x]
+                current_pipe.mask = "P"  # TODO check whether only route pipes needs to be marked
                 route += [Point(x, y)]
                 break
         return route
+
+    def to_maze_char(self):
+        return MazeChar(self.char, self.mask)
 
     def __repr__(self):
         return f"MazeTile(position={self.position}, leads_to={self.leads_to})"
@@ -88,22 +99,60 @@ def part1() -> int:
     return len(maze[y][x].loop(maze)) // 2
 
 
+def mask_outside(maze: list[list[MazeTile]]):
+    for y, line in enumerate(maze):
+        for x, pipe in enumerate(line):
+            if pipe.mask != "P":
+                if y == 0 or y == len(maze) - 1 or x == 0 or x == len(maze[0]) - 1:
+                    pipe.mask = "O"
+                    continue
+                if any(maze[j][i].mask == "O" for i, j in [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]):
+                    pipe.mask = "O"
+
+
+def horizontal_expand(maze: list[list[MazeChar]]):
+    length, height = len(maze[0]), len(maze)
+    for row in maze:
+        x = 0
+        started = False
+        while x < length:
+            if row[x * 2].char in ["S", "J", "-", "7", "F", "L"]:
+                if row[x * 2 - 1].char in ["7", "J"]:
+                    row.insert(x * 2, MazeChar("-", "P") if not started else MazeChar(".", "L"))
+                else:
+                    row.insert(x * 2, MazeChar("-", "P") if started else MazeChar(".", "L"))
+                started = True
+            else:
+                row.insert(x * 2, MazeChar(".", "L"))
+                started = False
+            x += 1
+
+
+def expand_leaks(maze: list[list[MazeChar]]):
+    x, y = 1, 1
+    while y < len(maze) and x < len(maze[0]):
+        current_tile = maze[y][x]
+
+
 def part2() -> int:
     maze = get_data("test_input_part2")
     x, y = [(x, y) for y, line in enumerate(maze) for x, pipe in enumerate(line) if len(pipe.leads_to) == 4][0]
-    route = maze[y][x].loop(maze)
-    # check for the enclosed with route mask
-    route_mask = [[1 if value.position in route else 0 for value in line] for line in maze]
+    _ = maze[y][x].loop(maze)
+    # expand vertically
+    maze_mask: list[list[MazeChar]] = [[pipe.to_maze_char() for pipe in line] for line in maze]
 
-    for line in route_mask:
-        print(*line, sep="")
-    for y, line in enumerate(maze):
-        for x, tile in enumerate(line):
-            if x not in [0, len(line)] or y not in [0, len(maze)]:
-                pass
+    for line in maze_mask:
+        for mask in line:
+            print(mask.char, sep="", end="")
+        print()
 
+    horizontal_expand(maze_mask)
+    for line in maze_mask:
+        for mask in line:
+            print(mask.char, sep="", end="")
+        print()
 
-    return
+    return sum(sum(pipe.mask == "I" for pipe in line) for line in maze)
 
 
 if __name__ == "__main__":
